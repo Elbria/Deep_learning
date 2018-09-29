@@ -1,33 +1,30 @@
 from keras.models import Sequential
-from keras.layers import Dense
-import numpy as np
 import keras
-from keras.layers import Dense, Dropout, Flatten
-from keras.layers import Conv2D, MaxPooling2D
+from keras.layers import Dense
 import matplotlib.pyplot as plt
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
-def data_preparation(num_pixels):
+def data_preparation():
     '''
-    Data preparation function for the MNIST dataset.
+    Data preparation function for the Breast cancer dataset.
 
-    :param num_pixels: number of pixels of each image input
     :return: train and test features and labels after preprocessing
     '''
 
-    x_train = np.load('Fashion MNIST/trainImages.npy')
-    x_test = np.load('Fashion MNIST/testImages.npy')
-    y_train = np.load('Fashion MNIST/trainLabels.npy')
-    y_test = np.load('Fashion MNIST/testLabels.npy')
+    x = pd.read_csv('Breast Cancer/breastCancerData.csv')
+    y = pd.read_csv('Breast Cancer/breastCancerLabels.csv')
 
-    # Use this initialization if you want to implement a perceptron
-    #x_train = x_train.reshape(x_train.shape[0], num_pixels).astype('float32')
-    #x_test = x_test.reshape(x_test.shape[0], num_pixels).astype('float32')
+    x_train, x_test, y_train, y_test = train_test_split(x, y, random_state=0)
 
-    x_train = x_train.reshape(x_train.shape[0], 28, 28, 1).astype('float32')
-    x_test = x_test.reshape(x_test.shape[0], 28, 28, 1).astype('float32')
+    sc = StandardScaler()
+    x_train = sc.fit_transform(x_train).astype('float32')
+    x_test = sc.transform(x_test).astype('float32')
 
-    x_train = x_train / 255
-    x_test = x_test / 255
+    y_train = keras.utils.to_categorical(y_train._values)  # these preserve dtype
+    y_test = keras.utils.to_categorical(y_test._values)  # these preserve dtype
+
     return x_train, x_test, y_train, y_test
 
 def outputs(history):
@@ -45,7 +42,7 @@ def outputs(history):
     plt.legend(['training', 'validation'], loc='best')
     plt.show()
 
-def model(num_pixels, num_classes, batch_size, epochs,  x_train, x_test, y_train, y_test):
+def model(num_features, num_classes, batch_size, epochs,  x_train, x_test, y_train, y_test):
     '''
     Main neural network model
 
@@ -58,37 +55,15 @@ def model(num_pixels, num_classes, batch_size, epochs,  x_train, x_test, y_train
     :param y_train: training set labels
     :param y_test: test set labels
     '''
-    '''
+
     # These lines implement a simple perceptron
     model = Sequential()
-    model.add(Dense(32, input_dim=num_pixels, kernel_initializer='normal', activation='relu'))
+    model.add(Dense(32, input_dim=num_features, kernel_initializer='normal', activation='relu'))
     model.add(Dense(num_classes, kernel_initializer='normal', activation='softmax'))
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=epochs,
                         batch_size=batch_size, verbose=2)
-    '''
-
-    model = Sequential()
-    model.add(Conv2D(32, (3, 3), input_shape=(28, 28, 1)))
-    model.add(Conv2D(64, (3, 3), activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-    model.add(Flatten())
-    model.add(Dense(128, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(num_classes, activation='softmax'))
-
-    model.compile(loss=keras.losses.categorical_crossentropy,
-                  optimizer=keras.optimizers.Adadelta(),
-                  metrics=['accuracy'])
-
-    model.fit(x_train, y_train,
-              batch_size=batch_size,
-              epochs=epochs,
-              verbose=1,
-              validation_data=(x_test, y_test))
-
 
     scores = model.evaluate(x_test, y_test, verbose=0)
     print("Baseline Error: %.2f%%" % (100-scores[1]*100))
@@ -101,12 +76,12 @@ def main():
 
     # Hyperparameters definition
     batch_size = 128
-    epochs = 2
-    num_pixels = 28 * 28
-    num_classes = 10
+    epochs = 100
+    num_features = 9
+    num_classes = 2
 
-    x_train, x_test, y_train, y_test = data_preparation(num_pixels)
-    model(num_pixels, num_classes, batch_size, epochs, x_train, x_test, y_train, y_test)
+    x_train, x_test, y_train, y_test = data_preparation()
+    model(num_features, num_classes, batch_size, epochs, x_train, x_test, y_train, y_test)
 
 if __name__ == '__main__':
     main()

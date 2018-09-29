@@ -14,10 +14,10 @@ def data_preparation(num_pixels):
     :return: train and test features and labels after preprocessing
     '''
 
-    x_train = np.load('Fashion MNIST/trainImages.npy')
-    x_test = np.load('Fashion MNIST/testImages.npy')
-    y_train = np.load('Fashion MNIST/trainLabels.npy')
-    y_test = np.load('Fashion MNIST/testLabels.npy')
+    x_train = np.load('MNIST/trainImages.npy')
+    x_test = np.load('MNIST/testImages.npy')
+    y_train = np.load('MNIST/trainLabels.npy')
+    y_test = np.load('MNIST/testLabels.npy')
 
     # Use this initialization if you want to implement a perceptron
     #x_train = x_train.reshape(x_train.shape[0], num_pixels).astype('float32')
@@ -83,12 +83,11 @@ def model(num_pixels, num_classes, batch_size, epochs,  x_train, x_test, y_train
                   optimizer=keras.optimizers.Adadelta(),
                   metrics=['accuracy'])
 
-    model.fit(x_train, y_train,
+    history = model.fit(x_train, y_train,
               batch_size=batch_size,
               epochs=epochs,
               verbose=1,
               validation_data=(x_test, y_test))
-
 
     scores = model.evaluate(x_test, y_test, verbose=0)
     print("Baseline Error: %.2f%%" % (100-scores[1]*100))
@@ -101,7 +100,7 @@ def main():
 
     # Hyperparameters definition
     batch_size = 128
-    epochs = 2
+    epochs = 1
     num_pixels = 28 * 28
     num_classes = 10
 
