@@ -38,24 +38,26 @@ def outputs(hist_):
 
     # Plot accuracy
     for i, history in enumerate(hist_):
-        plt.plot(history.history['acc'][1:], linestyle='dashed', color=colors[i], label = 'Training')
-        plt.plot(history.history['val_acc'][1:], color=colors[i], linewidth=3, label = 'Test')
+        plt.plot(history.history['acc'], linestyle='dashed', color=colors[i], label = 'Training')
+        plt.plot(history.history['val_acc'], color=colors[i], linewidth=3, label = 'Test')
     plt.ylabel('accuracy')
     plt.xlabel('epoch')
     plt.legend(loc='best')
-    plt.xlim(1)
+    plt.ylim(0.95,1)
+    plt.xlim(0)
     plt.grid()
     plt.show()
 
     plt.clf()
     # Plot loss
     for i, history in enumerate(hist_):
-        plt.plot(history.history['loss'][1:], linestyle='dashed', color=colors[i], label = 'Training')
-        plt.plot(history.history['val_loss'][1:], color=colors[i], linewidth=3,  label='Test')
+        plt.plot(history.history['loss'], linestyle='dashed', color=colors[i], label = 'Training')
+        plt.plot(history.history['val_loss'], color=colors[i], linewidth=3,  label='Test')
     plt.ylabel('loss')
     plt.xlabel('epoch')
     plt.legend(loc='best')
-    plt.xlim(1)
+    plt.ylim(0,0.1)
+    plt.xlim(0)
     plt.grid()
     plt.show()
 
@@ -123,7 +125,7 @@ def baseline(num_classes, batch_size, epochs,  x_train, x_test, y_train, y_test,
 
     outputs(history)
 
-def model(num_classes, batch_size, epochs,  x_train, x_test, y_train, y_test):
+def model(num_classes, batch_size, epochs,  x_train, x_test, y_train, y_test, param):
     '''
     Main neural network model
 
@@ -138,7 +140,9 @@ def model(num_classes, batch_size, epochs,  x_train, x_test, y_train, y_test):
     '''
 
     model = Sequential()
-    model.add(Conv2D(32, (7, 7), input_shape=(28, 28, 1)))
+    model.add(Conv2D(32, (7, 7), input_shape=(28, 28, 1), activation='relu'))
+    if param=='second':
+        model.add(Conv2D(64, (7, 7), activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Dropout(0.3))
     model.add(Flatten())
@@ -185,7 +189,7 @@ def main():
     parser = argparse.ArgumentParser(description='CNN experimentation for MNIST dataset')
     parser.add_argument('option', help='choose configuration', choices=['complex', 'baseline'])
     parser.add_argument('parameter', help='choose parameter for exploration',
-                        choices=['filter','pooling','dropout','num_filter', 'predefined'], type=str)
+                        choices=['filter','pooling','dropout','num_filter', 'second', 'predefined'], type=str)
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
     args = parser.parse_args()
     if args.verbose:
@@ -193,13 +197,13 @@ def main():
 
     # Hyperparameters definition
     batch_size = 128
-    epochs = 5
+    epochs = 25
     num_classes = 10
 
     x_train, x_test, y_train, y_test = data_preparation()
 
     if args.option=='complex':
-        model(num_classes, batch_size, epochs, x_train, x_test, y_train, y_test)
+        model(num_classes, batch_size, epochs, x_train, x_test, y_train, y_test, args.parameter)
     elif args.option=='baseline':
         baseline(num_classes, batch_size, epochs, x_train, x_test, y_train, y_test, args.parameter)
 
