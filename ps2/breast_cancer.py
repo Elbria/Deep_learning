@@ -20,7 +20,8 @@ def data_preparation():
     x = pd.read_csv('Breast Cancer/breastCancerData.csv')
     y = pd.read_csv('Breast Cancer/breastCancerLabels.csv')
 
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.20, random_state=42)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.15, random_state=42)
+
 
     # Distributions of data over candidate classes
     plt.clf()
@@ -41,12 +42,36 @@ def data_preparation():
     plt.title('Distribution of testing data')
     plt.show()
 
+
+    # Distribution of features (before preprocessing)
+    f, ax = plt.subplots(figsize=(11, 15))
+    plt.title("Breast Cancer Wisconsin training data (before pre-processing)")
+    ax = sns.boxplot(data=x_train,
+                     orient='v',
+                     palette='Set1')
+    plt.xticks([0,1,2,3,4,5,6,7,8,9], [0,1,2,3,4,5,6,7,8])
+    plt.xlabel('Features')
+    plt.show()
+
+
     sc = StandardScaler()
     x_train = sc.fit_transform(x_train).astype('float32')
     x_test = sc.transform(x_test).astype('float32')
 
+
+    # Distribution of features (after standarization)
+    f, ax = plt.subplots(figsize=(11, 15))
+    plt.title("Breast Cancer Wisconsin training data (after standarization)")
+    ax = sns.boxplot(data=x_train,
+                     orient='v',
+                     palette='Set1')
+    plt.xticks([0,1,2,3,4,5,6,7,8,9], [0,1,2,3,4,5,6,7,8])
+    plt.xlabel('Features')
+    plt.show()
+
     y_train = keras.utils.to_categorical(y_train._values)
     y_test = keras.utils.to_categorical(y_test._values)
+
 
     return x_train, x_test, y_train, y_test
 
@@ -112,7 +137,7 @@ def model(nodes, num_features, layers, num_classes, batch_size, epochs,  x_train
     for i in range(layers-1):
         model.add(Dense(int(nodes/(i+2)), kernel_initializer='normal', activation='relu'))
     model.add(Dense(num_classes, kernel_initializer='normal', activation='softmax'))
-    model.compile(loss='binary_crossentropy', optimizer='adadelta', metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
     history = model.fit(x_train, y_train, validation_data=(x_test, y_test), epochs=epochs,
                         batch_size=batch_size, verbose=2)
@@ -217,12 +242,10 @@ def main():
         incorrects_idx = [ground_truth[i] for i in range(len(ground_truth)) if predictions[i] != ground_truth[i]]
         logging.info('Misclassified data: %s' %(incorrects_idx))
 
-        # Plot distribution of misclassified examples over classes
-        plt.clf()
-        sns.distplot(incorrects_idx)
-        plt.grid()
-        plt.title('Distribution of misclassified data')
-        plt.show()
+        # Print incorrect classified examples
+        incorrects = np.nonzero(predictions - ground_truth)[0]
+        for id, sample in enumerate(incorrects):
+            logging.info('%d Incorrect classified example: %s' %(id, x_test[sample]))
 
 if __name__ == '__main__':
     main()
